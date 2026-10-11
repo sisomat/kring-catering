@@ -1,0 +1,1711 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kring Catering</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>tailwind.config={theme:{extend:{colors:{'gold-primary':'#14B8A6'}}}}</script>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Pacifico&display=swap" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Tone.js untuk Sound Effect Tanpa File Eksternal -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
+    
+    <style>
+        :root {
+            --bg-color: #E0F2FE;
+            --text-main: #1E293B;
+            --gold-primary: #14B8A6;
+            --gold-dark: #0F766E;
+            --accent-red: #EF4444;
+            --accent-green: #10B981;
+        }
+
+        body {
+            background-color: #0F172A; /* Slate 900 untuk background luar */
+            font-family: 'Inter', sans-serif;
+            color: var(--text-main);
+            overflow: hidden;
+            touch-action: manipulation;
+        }
+
+        .font-serif {
+            font-family: 'Playfair Display', serif;
+        }
+
+        /* Container & Themes */
+        #game-container {
+            background-color: var(--bg-color);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+            transition: all 0.5s ease;
+        }
+
+        .theme-lobby {
+            background-image: radial-gradient(circle at 50% 0%, #1E293B 0%, #020617 100%) !important;
+            background-size: cover !important;
+        }
+
+        .theme-dapur {
+            background-image: linear-gradient(rgba(255, 245, 230, 0.6), rgba(255, 245, 230, 0.85)), url('https://images.unsplash.com/photo-1556910103-1c02745a872f?q=80&w=2070&auto=format&fit=crop') !important;
+            background-size: cover !important;
+            background-position: center !important;
+        }
+
+        .theme-teras {
+            background-image: linear-gradient(rgba(235, 248, 255, 0.6), rgba(235, 248, 255, 0.85)), url('https://images.unsplash.com/photo-1600585154340-be6161a56a0c?q=80&w=2070&auto=format&fit=crop') !important;
+            background-size: cover !important;
+            background-position: center !important;
+        }
+
+        .theme-vip {
+            background-image: radial-gradient(circle at 50% 50%, rgba(220, 38, 38, 0.2), rgba(0, 0, 0, 0.9)), url('https://images.unsplash.com/photo-1556910103-1c02745a872f?q=80&w=2070&auto=format&fit=crop') !important;
+            animation: pulse-vip 1s infinite alternate;
+        }
+
+        @keyframes pulse-vip {
+            0% { box-shadow: inset 0 0 20px rgba(239, 68, 68, 0.5); }
+            100% { box-shadow: inset 0 0 60px rgba(239, 68, 68, 0.9); }
+        }
+
+        /* Screens */
+        .screen {
+            display: none;
+            opacity: 0;
+            transition: opacity 0.4s ease-in-out;
+        }
+        .screen.active {
+            display: flex;
+            opacity: 1;
+        }
+
+        /* Buttons */
+        .btn-3d {
+            position: relative;
+            background: linear-gradient(to bottom, #ffffff, #f8fafc);
+            color: #0284C7;
+            font-size: 1.25rem;
+            font-weight: 700;
+            border-radius: 16px;
+            border: 2px solid #E0F2FE;
+            box-shadow: 0 6px 0 #38BDF8, 0 10px 20px rgba(56, 189, 248, 0.25);
+            transition: all 0.1s cubic-bezier(0.4, 0, 0.2, 1);
+            cursor: pointer;
+            top: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 4.5rem;
+        }
+        .btn-3d:active {
+            top: 6px;
+            box-shadow: 0 0 0 #38BDF8, 0 2px 4px rgba(56, 189, 248, 0.2);
+        }
+
+        .btn-correct {
+            background: linear-gradient(to bottom, #34D399, #10B981) !important;
+            color: white !important;
+            border-color: #059669 !important;
+            box-shadow: 0 6px 0 #047857 !important;
+        }
+        .btn-wrong {
+            background: linear-gradient(to bottom, #F87171, #EF4444) !important;
+            color: white !important;
+            border-color: #DC2626 !important;
+            box-shadow: 0 6px 0 #B91C1C !important;
+        }
+
+        /* Avatar & NPC */
+        .avatar-wrapper { transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1); }
+        .avatar-speaking {
+            transform: scale(1.3);
+            opacity: 1;
+            z-index: 20;
+            filter: drop-shadow(0 4px 15px rgba(20,184,166,0.4));
+        }
+        .avatar-listening {
+            transform: scale(0.85);
+            opacity: 0.5;
+            z-index: 10;
+        }
+
+        /* Chat Callout Elegan (Bening 3D) */
+        .chat-bubble {
+            position: relative;
+            padding: 16px 20px;
+            max-width: 95%;
+            line-height: 1.6;
+            background: white;
+            border-radius: 16px;
+            box-shadow: 
+                inset 0 2px 0 rgba(255,255,255,1), 
+                inset 0 -2px 0 rgba(0,0,0,0.05),
+                0 10px 25px rgba(0,0,0,0.08), 
+                0 4px 10px rgba(0,0,0,0.04);
+            border: 1px solid rgba(0,0,0,0.05);
+        }
+        .chat-left {
+            border-left: 5px solid #14B8A6;
+            animation: popInLeft 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+            transform-origin: center left;
+        }
+        .chat-right {
+            border-right: 5px solid #0284C7;
+            animation: popInRight 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+            transform-origin: center right;
+        }
+
+        @keyframes popInLeft { 0% { transform: scale(0) translateX(-20px); opacity: 0; } 100% { transform: scale(1) translateX(0); opacity: 1; } }
+        @keyframes popInRight { 0% { transform: scale(0) translateX(20px); opacity: 0; } 100% { transform: scale(1) translateX(0); opacity: 1; } }
+
+        /* Animations */
+        .bounce-slow { animation: float-food 3s ease-in-out infinite; }
+        @keyframes float-food {
+            0%, 100% { transform: translateY(0) scale(1); }
+            50% { transform: translateY(-15px) scale(1.1); filter: drop-shadow(0 10px 10px rgba(0,0,0,0.2)); }
+        }
+
+        .particle {
+            position: absolute;
+            pointer-events: none;
+            border-radius: 50%;
+            z-index: 100;
+        }
+
+        .confetti {
+            position: absolute;
+            width: 12px;
+            height: 12px;
+            z-index: 100;
+            animation: fall linear forwards;
+        }
+        @keyframes fall {
+            to { transform: translateY(100vh) rotate(720deg); opacity: 0; }
+        }
+
+        /* UI Elements */
+        #feedback-msg { 
+            position: absolute;
+            top: 60%; 
+            left: 50%; 
+            transform: translate(-50%, -50%) scale(1); 
+            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); 
+        }
+        #feedback-msg.show { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+        #feedback-msg.hide { transform: translate(-50%, -50%) scale(0.8); opacity: 0; pointer-events: none; }
+
+        /* VIP Timer Bar */
+        #vip-timer-container { display: none; }
+        .vip-active #vip-timer-container { display: block; animation: shake 0.5s infinite; }
+        @keyframes shake {
+            0% { transform: translateX(0); }
+            25% { transform: translateX(-2px); }
+            75% { transform: translateX(2px); }
+            100% { transform: translateX(0); }
+        }
+
+        /* Lock Grid */
+        .recipe-card.locked { filter: grayscale(100%) brightness(50%); cursor: not-allowed; }
+        
+        /* Glass Panel */
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.2);
+            box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+        }
+
+        /* ================= MODERN ELEGANT OVERRIDES ================= */
+        :root { --gold:#14B8A6; --gold-soft:#99F6E4; --ink:#0B1020; --ivory:#F2FCFA; }
+        body {
+            background: radial-gradient(circle at 50% 30%, #131A33 0%, #05070F 100%) !important;
+            letter-spacing: 0.005em;
+        }
+        #game-container { box-shadow: 0 30px 80px rgba(0,0,0,0.6), inset 0 0 0 1px rgba(20,184,166,0.28); }
+
+        .theme-lobby {
+            background-image:
+                radial-gradient(ellipse at 20% 15%, rgba(20,184,166,0.16) 0%, transparent 45%),
+                radial-gradient(ellipse at 85% 90%, rgba(56,189,248,0.10) 0%, transparent 45%),
+                linear-gradient(160deg, #111833 0%, #070B18 55%, #03050C 100%) !important;
+        }
+        .theme-dapur {
+            background-image: linear-gradient(135deg, rgba(7,11,24,0.82), rgba(7,11,24,0.50)), url('https://images.unsplash.com/photo-1556910103-1c02745a872f?q=80&w=2070&auto=format&fit=crop') !important;
+        }
+        .theme-teras {
+            background-image: linear-gradient(135deg, rgba(7,11,24,0.82), rgba(7,11,24,0.50)), url('https://images.unsplash.com/photo-1600585154340-be6161a56a0c?q=80&w=2070&auto=format&fit=crop') !important;
+        }
+
+        /* Tombol elegan (menggantikan gaya 3D tebal) */
+        .btn-3d {
+            background: linear-gradient(180deg, rgba(255,255,255,0.97), rgba(240,250,247,0.92));
+            color: #1E293B;
+            border: 1px solid rgba(20,184,166,0.55);
+            border-radius: 14px;
+            font-family: 'Playfair Display', serif;
+            font-weight: 700;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.22), inset 0 1px 0 #fff;
+            transition: transform .18s ease, box-shadow .18s ease, background .18s ease;
+        }
+        .btn-3d:hover { transform: translateY(-2px); box-shadow: 0 12px 28px rgba(20,184,166,0.28), inset 0 1px 0 #fff; }
+        .btn-3d:active { top: 0; transform: translateY(1px); box-shadow: 0 3px 10px rgba(0,0,0,0.25); }
+        .btn-correct { background: linear-gradient(180deg,#34D399,#059669) !important; color:#fff !important; border-color:#6EE7B7 !important; box-shadow: 0 8px 24px rgba(16,185,129,0.4) !important; }
+        .btn-wrong   { background: linear-gradient(180deg,#FB7185,#E11D48) !important; color:#fff !important; border-color:#FDA4AF !important; box-shadow: 0 8px 24px rgba(244,63,94,0.4) !important; }
+        .btn-gold {
+            background: linear-gradient(135deg, #99F6E4 0%, #14B8A6 55%, #0D9488 100%);
+            color: #1B1405; border: 1px solid rgba(255,255,255,0.35); border-radius: 14px;
+            font-family: 'Playfair Display', serif; font-weight: 700; letter-spacing: .04em;
+            box-shadow: 0 10px 28px rgba(20,184,166,0.35), inset 0 1px 0 rgba(255,255,255,0.6);
+            transition: transform .18s ease, box-shadow .18s ease; cursor: pointer;
+        }
+        .btn-gold:hover { transform: translateY(-2px); box-shadow: 0 14px 34px rgba(20,184,166,0.5), inset 0 1px 0 rgba(255,255,255,0.6); }
+        .btn-gold:active { transform: translateY(1px); }
+
+        .chat-bubble { border-radius: 18px; border: 1px solid rgba(20,184,166,0.25); background: rgba(250,255,254,0.96); }
+        .glass-panel { background: rgba(255,255,255,0.06); border: 1px solid rgba(20,184,166,0.28); box-shadow: 0 16px 48px rgba(0,0,0,0.4); }
+
+        #screen-shop, #screen-recipes { background: radial-gradient(ellipse at 50% 0%, #19213F 0%, #080C1A 70%) !important; }
+        #screen-result { background: radial-gradient(ellipse at 50% 0%, #1B2547 0%, #05070F 75%) !important; }
+        #result-title { color: var(--gold-soft) !important; }
+
+        .lobby-left, .lobby-right { display: contents; }
+        .lobby-tagline { display: none; }
+
+        /* ================= DESKTOP: STAGE 16:9 FULL SCREEN ================= */
+        @media (min-width: 700px) and (orientation: landscape) {
+            html, body { width: 100%; height: 100%; overflow: hidden; }
+            #game-container {
+                position: fixed !important; left: 0; top: 0;
+                width: var(--stage-w, 1280px) !important; height: var(--stage-h, 720px) !important;
+                max-width: none !important; margin: 0 !important;
+                border: 0 !important; border-radius: 0 !important; box-shadow: none !important;
+                transform: scale(var(--stage-scale, 1));
+                transform-origin: top left;
+            }
+            .confetti { animation-name: fall; }
+
+            /* Lobi */
+            #screen-lobby { flex-direction: row !important; align-items: center; justify-content: center; gap: 72px; padding: 56px 96px; text-align: left; }
+            .lobby-left { display: flex; flex-direction: column; align-items: flex-start; flex: 1; }
+            .lobby-left > div:first-child { margin-top: 0 !important; }
+            .lobby-left h1 { font-size: 104px !important; line-height: 1.02; text-align: left; margin-bottom: 18px !important; }
+            .lobby-left > div:nth-child(3) { margin-left: 0 !important; width: 120px; height: 2px; margin-bottom: 22px !important; background: linear-gradient(90deg,#14B8A6,transparent) !important; }
+            .lobby-tagline { display: block; color: #94A3B8; font-size: 15px; letter-spacing: .32em; text-transform: uppercase; font-weight: 600; }
+            .lobby-right { display: flex; flex-direction: column; width: 500px; padding: 32px; border-radius: 28px; background: rgba(255,255,255,0.05); border: 1px solid rgba(20,184,166,0.28); backdrop-filter: blur(14px); box-shadow: 0 24px 64px rgba(0,0,0,0.45); }
+            .lobby-right .glass-panel { background: rgba(255,255,255,0.05); box-shadow: none; }
+            .lobby-right > p { font-size: 11px !important; }
+
+            /* Toko & Resep */
+            #screen-shop, #screen-recipes { padding: 40px 120px !important; }
+            #shop-aisyah, #shop-somat { display: grid !important; grid-template-columns: 1fr 1fr; gap: 14px; }
+            #recipe-grid { grid-template-columns: repeat(4, 1fr) !important; }
+
+            /* Game */
+            #screen-game > div:nth-child(1) { padding: 28px 56px 8px !important; }
+            #screen-game > div:nth-child(2), #screen-game > div:nth-child(3) { padding-left: 56px !important; padding-right: 56px !important; }
+            #screen-game .text-\[10px\], #screen-game .text-\[9px\] { font-size: 13px !important; }
+            #health-container > * { font-size: 20px !important; }
+            #screen-game > div:nth-child(4) {
+                display: grid !important; grid-template-columns: 1fr 1fr; grid-template-rows: 1fr auto;
+                column-gap: 56px; row-gap: 20px; padding: 0 56px 36px !important; align-items: center;
+            }
+            #visual-scene { grid-column: 1; grid-row: 1 / span 2; margin-bottom: 0 !important; padding: 0 16px; }
+            #npc-avatar, #player-avatar { width: 124px !important; height: 124px !important; font-size: 68px !important; border: 3px solid rgba(20,184,166,0.8) !important; }
+            #npc-name, #player-name { font-size: 14px !important; padding: 6px 18px !important; }
+            #story-visual-icon { font-size: 104px !important; }
+            #story-container { grid-column: 2; grid-row: 1; margin-bottom: 0 !important; align-self: end; }
+            #story-text { min-height: 150px; }
+            #story-text .font-serif { font-size: 24px !important; line-height: 1.45; }
+            #story-text .text-\[10px\] { font-size: 12px !important; }
+            #options-container { grid-column: 2; grid-row: 2; padding-bottom: 0 !important; }
+            .btn-3d { height: 4.25rem; font-size: 1.6rem; }
+            #feedback-msg { left: 75%; top: 55%; width: 44% !important; }
+
+            /* Hasil */
+            #screen-result > div { max-width: 560px; }
+        }
+
+        /* ===== Karakter tanpa frame & latar gambar penuh ===== */
+        .theme-lobby {
+            background-image: linear-gradient(135deg, rgba(5,8,18,0.88), rgba(5,8,18,0.55)), url('https://images.unsplash.com/photo-1556910103-1c02745a872f?q=80&w=2070&auto=format&fit=crop') !important;
+            background-size: cover !important; background-position: center !important;
+        }
+        #screen-lobby [onclick^="selectRole"] > div:first-child { display: none !important; }
+        #screen-lobby [onclick^="selectRole"] > div:nth-child(2) {
+            background: transparent !important; border: 0 !important; box-shadow: none !important;
+            padding: 0 !important; overflow: visible !important; transition: transform .25s ease;
+        }
+        #screen-lobby [onclick^="selectRole"]:hover > div:nth-child(2) { transform: translateY(-6px) scale(1.04); box-shadow: none !important; }
+        #screen-lobby [onclick^="selectRole"] > div:nth-child(2) > div:first-child {
+            width: auto !important; height: 130px !important; border: 0 !important; border-radius: 0 !important;
+            background: transparent !important; box-shadow: none !important; overflow: visible !important;
+            font-size: 84px; margin-bottom: 8px !important;
+        }
+        #screen-lobby [onclick^="selectRole"] img { width: auto !important; height: 100% !important; object-fit: contain !important; filter: drop-shadow(0 10px 18px rgba(0,0,0,0.55)); }
+        #screen-lobby [onclick^="selectRole"] h3 { font-size: 20px; }
+
+        @media (min-width: 700px) and (orientation: landscape) {
+            #screen-lobby [onclick^="selectRole"] > div:nth-child(2) > div:first-child { height: 230px !important; font-size: 150px; }
+            #screen-lobby [onclick^="selectRole"] h3 { font-size: 24px; }
+            #screen-lobby [onclick^="selectRole"] p { font-size: 11px !important; }
+
+            #npc-avatar, #player-avatar {
+                width: auto !important; height: 340px !important; font-size: 170px !important; line-height: 1;
+                background: transparent !important; border: 0 !important; border-radius: 0 !important;
+                box-shadow: none !important; overflow: visible !important; margin-bottom: 10px !important;
+                display: flex; align-items: flex-end; justify-content: center;
+            }
+            #npc-avatar img, #player-avatar img { width: auto !important; height: 100% !important; object-fit: contain !important; filter: drop-shadow(0 14px 24px rgba(0,0,0,0.6)); }
+            .avatar-speaking { transform: scale(1.06); }
+            .avatar-listening { transform: scale(0.94); opacity: 0.6; }
+            #story-visual-icon { font-size: 80px !important; }
+            #visual-scene { padding: 0 !important; align-items: flex-end; }
+        }
+
+        /* ===== Polesan modern elegan: HUD, dialog, jawaban, toko ===== */
+        #game-container::before {
+            content: ''; position: absolute; inset: 0; z-index: 1; pointer-events: none;
+            background: radial-gradient(ellipse at center, transparent 55%, rgba(0,0,0,0.45) 100%);
+        }
+        .screen { transform: translateY(8px); transition: opacity .5s ease, transform .5s ease; }
+        .screen.active { transform: translateY(0); }
+
+        /* HUD kaca gelap + aksen emas */
+        #screen-game .bg-white\/70, #screen-game .bg-white\/50, #screen-game .bg-white\/40 {
+            background: rgba(10,15,32,0.55) !important;
+            border: 1px solid rgba(20,184,166,0.35) !important;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.3) !important;
+            backdrop-filter: blur(12px);
+        }
+        #screen-game .text-slate-600, #screen-game .text-slate-700, #screen-game .text-slate-800 { color: #F3EAD0 !important; }
+        #screen-game > div:first-child button { color: #99F6E4 !important; }
+        #screen-game > div:first-child button:hover { background: rgba(20,184,166,0.2) !important; }
+        #progress-bar-fill { background: linear-gradient(90deg, #0D9488, #99F6E4) !important; box-shadow: 0 0 14px rgba(20,184,166,0.7) !important; }
+        #normal-progress .rounded-full.overflow-hidden { height: 6px !important; border: 0 !important; background: rgba(255,255,255,0.15) !important; }
+
+        /* Nama karakter */
+        #npc-name, #player-name {
+            background: rgba(10,15,32,0.7) !important; color: #99F6E4 !important;
+            border: 1px solid rgba(20,184,166,0.45); backdrop-filter: blur(8px);
+            letter-spacing: .22em !important; box-shadow: 0 6px 18px rgba(0,0,0,0.4) !important;
+        }
+
+        /* Dialog */
+        .chat-bubble {
+            background: linear-gradient(160deg, rgba(250,255,254,0.98), rgba(236,249,246,0.95));
+            border: 1px solid rgba(20,184,166,0.45);
+            box-shadow: 0 18px 40px rgba(0,0,0,0.35), inset 0 1px 0 #fff;
+            border-radius: 20px;
+        }
+        .chat-bubble .font-serif { color: #1E2538 !important; }
+        .chat-bubble .text-slate-500 { color: #0F766E !important; letter-spacing: .28em; }
+        .chat-left { border-left: 4px solid #14B8A6; }
+        .chat-right { border-right: 4px solid #14B8A6; }
+        #story-container .animate-pulse { color: #99F6E4 !important; }
+
+        /* Jawaban */
+        #options-container .btn-3d { animation: riseIn .45s ease backwards; }
+        #options-container .btn-3d:nth-child(2) { animation-delay: .06s; }
+        #options-container .btn-3d:nth-child(3) { animation-delay: .12s; }
+        #options-container .btn-3d:nth-child(4) { animation-delay: .18s; }
+        @keyframes riseIn { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* Umpan balik */
+        #feedback-msg {
+            background: rgba(250,255,254,0.97) !important; border: 1px solid rgba(20,184,166,0.6) !important;
+            border-radius: 20px !important; box-shadow: 0 24px 60px rgba(0,0,0,0.5) !important;
+        }
+
+        /* VIP */
+        #vip-timer-container .text-red-600 { color: #FCA5A5 !important; letter-spacing: .25em; }
+        #vip-bar { background: linear-gradient(90deg, #E11D48, #99F6E4) !important; }
+
+        /* Toko, resep, hasil */
+        #screen-shop h2, #screen-recipes h2 { font-size: 30px; letter-spacing: .06em; color: #99F6E4 !important; }
+        #screen-shop .bg-slate-800, #screen-recipes .bg-slate-800 {
+            background: rgba(255,255,255,0.05) !important;
+            border: 1px solid rgba(20,184,166,0.28) !important;
+            backdrop-filter: blur(10px); box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+        #screen-shop button.rounded-full, #screen-recipes button.rounded-full { border: 1px solid rgba(20,184,166,0.4); color: #99F6E4; }
+        #screen-shop .bg-\[\#14B8A6\] { background: linear-gradient(135deg, #99F6E4, #14B8A6) !important; color: #1B1405 !important; }
+        .recipe-card:not(.locked):hover { box-shadow: 0 16px 40px rgba(20,184,166,0.25); }
+        #screen-result .bg-white { background: rgba(250,255,254,0.97) !important; border: 1px solid rgba(20,184,166,0.4) !important; }
+        #result-icon-container { box-shadow: 0 0 60px rgba(20,184,166,0.55) !important; }
+
+        /* Lobi */
+        .lobby-left h1 { filter: drop-shadow(0 6px 24px rgba(20,184,166,0.35)); }
+        #screen-lobby .bg-slate-800 {
+            background: rgba(255,255,255,0.06) !important; border: 1px solid rgba(20,184,166,0.35) !important;
+            transition: transform .2s ease, background .2s ease;
+        }
+        #screen-lobby .bg-slate-800:hover { background: rgba(20,184,166,0.16) !important; transform: translateY(-2px); }
+
+        /* ===== TEMA CERAH ELEGAN (override tema gelap) ===== */
+        body { background: radial-gradient(circle at 50% 20%, #F6FFFD 0%, #EAF4FB 100%) !important; }
+        #game-container { box-shadow: 0 20px 60px rgba(40,90,85,0.25), inset 0 0 0 1px rgba(13,148,136,0.3); }
+        #game-container::before { background: radial-gradient(ellipse at center, transparent 65%, rgba(235,252,248,0.35) 100%) !important; }
+
+        .theme-lobby {
+            background-image: linear-gradient(135deg, rgba(240,253,250,0.90), rgba(236,246,252,0.55)), url('https://images.unsplash.com/photo-1556910103-1c02745a872f?q=80&w=2070&auto=format&fit=crop') !important;
+            background-size: cover !important; background-position: center !important;
+        }
+        .theme-dapur {
+            background-image: linear-gradient(135deg, rgba(240,253,250,0.72), rgba(240,253,250,0.35)), url('https://images.unsplash.com/photo-1556910103-1c02745a872f?q=80&w=2070&auto=format&fit=crop') !important;
+        }
+        .theme-teras {
+            background-image: linear-gradient(135deg, rgba(240,249,255,0.72), rgba(240,249,255,0.35)), url('https://images.unsplash.com/photo-1600585154340-be6161a56a0c?q=80&w=2070&auto=format&fit=crop') !important;
+        }
+        .theme-vip {
+            background-image: radial-gradient(circle at 50% 50%, rgba(255,255,255,0.1), rgba(244,63,94,0.28)), url('https://images.unsplash.com/photo-1556910103-1c02745a872f?q=80&w=2070&auto=format&fit=crop') !important;
+        }
+        @keyframes pulse-vip {
+            0% { box-shadow: inset 0 0 20px rgba(244,63,94,0.35); }
+            100% { box-shadow: inset 0 0 70px rgba(244,63,94,0.6); }
+        }
+
+        /* Awal / audio */
+        #audio-init { background: rgba(240,253,250,0.92) !important; }
+        #audio-init h2 { color: #0F3D39 !important; }
+        #audio-init p { color: #3F6762 !important; }
+
+        /* Lobi */
+        .lobby-left h1 { background-image: linear-gradient(90deg, #0F766E, #14B8A6 50%, #0F766E) !important; filter: drop-shadow(0 4px 12px rgba(20,184,166,0.3)); }
+        .lobby-tagline { color: #4B6B66 !important; }
+        .lobby-right, #screen-lobby .glass-panel {
+            background: rgba(255,255,255,0.72) !important; border: 1px solid rgba(13,148,136,0.4) !important;
+            box-shadow: 0 20px 50px rgba(40,90,85,0.18) !important; backdrop-filter: blur(14px);
+        }
+        #screen-lobby .glass-panel { box-shadow: none !important; }
+        #screen-lobby .text-white { color: #1E293B !important; }
+        #screen-lobby .text-slate-400 { color: #64748B !important; }
+        #screen-lobby .text-slate-100 { color: #1E293B !important; }
+        #screen-lobby .text-green-400 { color: #15803D !important; }
+        #screen-lobby .text-pink-300 { color: #BE185D !important; }
+        #screen-lobby .text-sky-300 { color: #0369A1 !important; }
+        #screen-lobby .bg-slate-800 {
+            background: rgba(255,255,255,0.9) !important; border: 1px solid rgba(13,148,136,0.45) !important;
+            box-shadow: 0 8px 20px rgba(40,90,85,0.12) !important;
+        }
+        #screen-lobby .bg-slate-800:hover { background: #E6FFFA !important; }
+        #screen-lobby [onclick^="selectRole"] img { filter: drop-shadow(0 10px 16px rgba(20,60,56,0.3)) !important; }
+
+        /* HUD */
+        #screen-game .bg-white\/70, #screen-game .bg-white\/50, #screen-game .bg-white\/40 {
+            background: rgba(255,255,255,0.78) !important; border: 1px solid rgba(13,148,136,0.4) !important;
+            box-shadow: 0 6px 18px rgba(40,90,85,0.15) !important;
+        }
+        #screen-game .text-slate-600, #screen-game .text-slate-700, #screen-game .text-slate-800 { color: #334155 !important; }
+        #screen-game > div:first-child button { color: #0F766E !important; }
+        #screen-game > div:first-child button:hover { background: #CCFBF1 !important; }
+        #normal-progress .rounded-full.overflow-hidden { background: rgba(255,255,255,0.7) !important; border: 1px solid rgba(13,148,136,0.3) !important; }
+
+        #npc-name, #player-name {
+            background: rgba(255,255,255,0.92) !important; color: #0F766E !important;
+            border: 1px solid rgba(13,148,136,0.5); box-shadow: 0 6px 16px rgba(40,90,85,0.2) !important;
+        }
+        #npc-avatar img, #player-avatar img { filter: drop-shadow(0 12px 18px rgba(20,60,56,0.35)) !important; }
+        #story-container .animate-pulse { color: #0F766E !important; }
+        #vip-timer-container .text-red-600 { color: #BE123C !important; }
+
+        /* Tombol jawaban */
+        .btn-3d { box-shadow: 0 8px 20px rgba(40,90,85,0.2), inset 0 1px 0 #fff; border: 1px solid rgba(13,148,136,0.6); }
+        .btn-3d:hover { background: #F0FDFA; box-shadow: 0 12px 26px rgba(20,184,166,0.35), inset 0 1px 0 #fff; }
+
+        /* Toko & resep */
+        #screen-shop, #screen-recipes { background: linear-gradient(160deg, #F6FFFD 0%, #EAF4FB 100%) !important; }
+        #screen-shop .text-white, #screen-recipes .text-white { color: #1E293B !important; }
+        #screen-shop .text-slate-400, #screen-recipes .text-slate-400 { color: #64748B !important; }
+        #screen-shop .text-slate-500 { color: #64748B !important; }
+        #screen-shop h2, #screen-recipes h2 { color: #0F766E !important; }
+        #screen-shop .bg-slate-800, #screen-recipes .bg-slate-800 {
+            background: rgba(255,255,255,0.85) !important; border: 1px solid rgba(13,148,136,0.35) !important;
+            box-shadow: 0 8px 22px rgba(40,90,85,0.12) !important;
+        }
+        #screen-shop .bg-slate-700 { background: #D5F5EF !important; }
+        #screen-shop button.bg-slate-700 { background: #E2E8F0 !important; color: #94A3B8 !important; }
+        #screen-shop .border-slate-700, #screen-recipes .border-slate-700 { border-color: rgba(13,148,136,0.3) !important; }
+        #screen-shop button.rounded-full, #screen-recipes button.rounded-full { background: #fff !important; color: #0F766E !important; }
+        #screen-shop .text-green-400 { color: #15803D !important; }
+        #screen-shop .text-pink-400 { color: #BE185D !important; }
+        #screen-shop .text-sky-400 { color: #0369A1 !important; }
+        .recipe-card.locked { filter: grayscale(100%) opacity(0.55); }
+
+        /* Hasil */
+        #screen-result { background: linear-gradient(160deg, #F6FFFD 0%, #EAF4FB 100%) !important; }
+        #result-title { color: #0F766E !important; }
+        #result-icon-container { box-shadow: 0 0 50px rgba(20,184,166,0.45) !important; }
+
+        /* Toast */
+        body > .fixed.bg-slate-800 { background: #fff !important; color: #334155 !important; border: 1px solid rgba(13,148,136,0.5) !important; }
+
+        /* ===== DESKTOP: PERCAKAPAN FOKUS KIRI-KANAN + CALLOUT ===== */
+        @media (min-width: 700px) and (orientation: landscape) {
+            #screen-game > div:nth-child(4) {
+                display: grid !important; grid-template-columns: 1fr !important; grid-template-rows: 1fr auto !important;
+                row-gap: 8px !important; padding: 0 64px 28px !important; align-items: stretch !important; position: relative;
+            }
+            /* Karakter di tepi kiri & kanan */
+            #visual-scene {
+                grid-column: 1 !important; grid-row: 1 !important; width: 100%;
+                display: flex !important; justify-content: space-between !important; align-items: flex-end !important;
+                padding: 0 !important; margin: 0 !important;
+            }
+            #visual-scene > div:nth-child(2) { align-self: flex-end; padding-bottom: 36px; }
+            .avatar-wrapper { transform-origin: bottom center; }
+            #npc-avatar, #player-avatar { height: 310px !important; }
+            #story-visual-icon { font-size: 76px !important; margin: 0 !important; }
+
+            /* Bubble callout di samping karakter */
+            #story-container {
+                position: absolute !important; left: 64px; right: 64px; top: 2%;
+                margin: 0 !important; z-index: 30; pointer-events: none; grid-column: auto !important; grid-row: auto !important;
+            }
+            #story-container * { pointer-events: auto; }
+            #story-text { min-height: 0 !important; }
+            #story-text > div { width: 100%; }
+            #story-text .chat-bubble {
+                max-width: 42%; min-width: 300px; padding: 20px 26px;
+                border: 1px solid rgba(13,148,136,0.55) !important; border-radius: 22px;
+            }
+            #story-text .chat-left  { margin-left: 22%; transform-origin: left center; }
+            #story-text .chat-right { margin-right: 22%; transform-origin: right center; }
+            #story-text .font-serif { font-size: 22px !important; line-height: 1.45; }
+            #story-text .chat-bubble .text-\[10px\] { font-size: 12px !important; }
+
+            /* Ekor callout menunjuk karakter */
+            #story-text .chat-bubble::after {
+                content: ''; position: absolute; top: 44px; width: 20px; height: 20px;
+                background: #F8FFFD; transform: rotate(45deg);
+            }
+            #story-text .chat-left::after  { left: -11px; border-left: 1px solid rgba(13,148,136,0.55); border-bottom: 1px solid rgba(13,148,136,0.55); }
+            #story-text .chat-right::after { right: -11px; border-right: 1px solid rgba(13,148,136,0.55); border-top: 1px solid rgba(13,148,136,0.55); }
+            #story-text .animate-pulse { margin-left: calc(22% + 18px) !important; }
+
+            /* Jawaban di bawah, tengah */
+            #options-container {
+                grid-column: 1 !important; grid-row: 2 !important; width: 100%; max-width: 880px;
+                justify-self: center; padding-bottom: 0 !important;
+            }
+            .btn-3d { height: 4rem; font-size: 1.45rem; }
+
+            /* Umpan balik di tengah */
+            #feedback-msg { left: 50% !important; top: 66% !important; width: auto !important; min-width: 340px; max-width: 560px; }
+        }
+
+        /* ===== Tombol ulangi perintah ===== */
+        .replay-btn {
+            margin-top: 8px; display: inline-flex; align-items: center; gap: 6px;
+            padding: 6px 14px; border-radius: 999px; cursor: pointer;
+            background: linear-gradient(135deg, #99F6E4, #14B8A6); color: #032F2B;
+            border: 1px solid rgba(255,255,255,0.6); font-size: 12px; font-weight: 800; letter-spacing: .08em;
+            text-transform: uppercase; box-shadow: 0 6px 16px rgba(13,148,136,0.35);
+            transition: transform .18s ease, box-shadow .18s ease;
+        }
+        .replay-btn:hover { transform: translateY(-2px); box-shadow: 0 10px 22px rgba(13,148,136,0.5); }
+        .replay-btn:hover i { transform: rotate(-200deg); }
+        .replay-btn:active { transform: scale(0.95); }
+        .replay-btn i { transition: transform .4s ease; }
+        .replay-btn.playing { animation: replayPulse 1s ease-in-out infinite; }
+        @keyframes replayPulse { 0%,100% { box-shadow: 0 0 0 0 rgba(20,184,166,0.6); } 50% { box-shadow: 0 0 0 10px rgba(20,184,166,0); } }
+        @media (min-width: 700px) and (orientation: landscape) { .replay-btn { font-size: 14px; padding: 8px 18px; margin-top: 10px; } }
+        #feedback-msg { display: none !important; }
+
+        /* ===== TOMBOL GAYA 3D GAME ===== */
+        .btn-3d, .btn-gold, .replay-btn,
+        #screen-lobby button.bg-slate-800, #screen-shop button.bg-\[\#14B8A6\],
+        #screen-shop button.rounded-full, #screen-recipes button.rounded-full {
+            position: relative; cursor: pointer; user-select: none; -webkit-tap-highlight-color: transparent;
+            transition: transform .08s ease, box-shadow .08s ease, filter .15s ease !important;
+        }
+
+        /* Jawaban: krem-emas */
+        .btn-3d {
+            background: linear-gradient(180deg, #F4FFFD 0%, #C9F7EE 55%, #7BE3D2 100%) !important;
+            color: #073B36 !important; text-shadow: 0 1px 0 rgba(255,255,255,0.9);
+            border: 2px solid #0D9488 !important; border-radius: 16px !important;
+            box-shadow: 0 6px 0 #0F8B7E, 0 10px 16px rgba(6,60,56,0.3), inset 0 2px 0 rgba(255,255,255,0.95), inset 0 -3px 0 rgba(13,148,136,0.25) !important;
+            transform: translateY(0);
+        }
+        .btn-3d:hover:not(:disabled) { transform: translateY(-2px); filter: brightness(1.05);
+            box-shadow: 0 8px 0 #0F8B7E, 0 14px 20px rgba(6,60,56,0.3), inset 0 2px 0 rgba(255,255,255,0.95), inset 0 -3px 0 rgba(13,148,136,0.25) !important; }
+        .btn-3d:active:not(:disabled) { transform: translateY(5px);
+            box-shadow: 0 1px 0 #0F8B7E, 0 3px 6px rgba(6,60,56,0.3), inset 0 2px 0 rgba(255,255,255,0.9) !important; }
+        .btn-3d:disabled { cursor: default; }
+        .btn-correct {
+            background: linear-gradient(180deg, #86EFAC 0%, #34D399 55%, #10B981 100%) !important; color: #05381F !important;
+            border: 2px solid #047857 !important; text-shadow: 0 1px 0 rgba(255,255,255,0.5);
+            box-shadow: 0 6px 0 #047857, 0 10px 18px rgba(4,120,87,0.4), inset 0 2px 0 rgba(255,255,255,0.6) !important;
+        }
+        .btn-wrong {
+            background: linear-gradient(180deg, #FDA4AF 0%, #FB7185 55%, #F43F5E 100%) !important; color: #5B0A1B !important;
+            border: 2px solid #9F1239 !important; text-shadow: 0 1px 0 rgba(255,255,255,0.4);
+            box-shadow: 0 6px 0 #9F1239, 0 10px 18px rgba(159,18,57,0.4), inset 0 2px 0 rgba(255,255,255,0.5) !important;
+        }
+
+        /* Tombol utama emas */
+        .btn-gold {
+            background: linear-gradient(180deg, #8EF0DD 0%, #2DD4BF 50%, #0D9488 100%) !important; color: #032F2B !important;
+            text-shadow: 0 1px 0 rgba(255,255,255,0.7); border: 2px solid #0F766E !important; border-radius: 18px !important;
+            box-shadow: 0 7px 0 #0F766E, 0 12px 20px rgba(6,60,56,0.35), inset 0 2px 0 rgba(255,255,255,0.85), inset 0 -3px 0 rgba(15,118,110,0.3) !important;
+        }
+        .btn-gold:hover { transform: translateY(-2px); filter: brightness(1.06); }
+        .btn-gold:active { transform: translateY(6px); box-shadow: 0 1px 0 #0F766E, 0 3px 6px rgba(6,60,56,0.3), inset 0 2px 0 rgba(255,255,255,0.8) !important; }
+
+        /* Ulangi */
+        .replay-btn {
+            background: linear-gradient(180deg, #E0F2FE 0%, #7DD3FC 55%, #38BDF8 100%) !important; color: #06324A !important;
+            border: 2px solid #0369A1 !important; text-shadow: 0 1px 0 rgba(255,255,255,0.7);
+            box-shadow: 0 4px 0 #0369A1, 0 8px 12px rgba(3,105,161,0.3), inset 0 2px 0 rgba(255,255,255,0.8) !important;
+        }
+        .replay-btn:hover { transform: translateY(-2px); filter: brightness(1.06); }
+        .replay-btn:active { transform: translateY(3px); box-shadow: 0 1px 0 #0369A1, inset 0 2px 0 rgba(255,255,255,0.7) !important; }
+
+        /* Toko & Resep di lobi: biru langit */
+        #screen-lobby button.bg-slate-800 {
+            background: linear-gradient(180deg, #E0F2FE 0%, #7DD3FC 55%, #38BDF8 100%) !important; color: #06324A !important;
+            border: 2px solid #0369A1 !important; border-radius: 16px !important; text-shadow: 0 1px 0 rgba(255,255,255,0.7);
+            box-shadow: 0 6px 0 #0369A1, 0 10px 16px rgba(3,105,161,0.3), inset 0 2px 0 rgba(255,255,255,0.85) !important;
+            transform: translateY(0);
+        }
+        #screen-lobby button.bg-slate-800 i { color: #075985 !important; }
+        #screen-lobby button.bg-slate-800:hover { transform: translateY(-2px); filter: brightness(1.06); }
+        #screen-lobby button.bg-slate-800:active { transform: translateY(5px); box-shadow: 0 1px 0 #0369A1, inset 0 2px 0 rgba(255,255,255,0.8) !important; }
+
+        /* Tombol beli & kembali */
+        #screen-shop button.bg-\[\#14B8A6\] {
+            background: linear-gradient(180deg, #8EF0DD, #2DD4BF 55%, #0D9488) !important; color: #032F2B !important;
+            border: 2px solid #0F766E !important; box-shadow: 0 4px 0 #0F766E, inset 0 2px 0 rgba(255,255,255,0.8) !important;
+        }
+        #screen-shop button.bg-\[\#14B8A6\]:hover { transform: translateY(-1px); }
+        #screen-shop button.bg-\[\#14B8A6\]:active { transform: translateY(3px); box-shadow: 0 1px 0 #0F766E !important; }
+        #screen-shop button.rounded-full, #screen-recipes button.rounded-full {
+            border: 2px solid #0D9488 !important; box-shadow: 0 4px 0 #0F8B7E, inset 0 2px 0 #fff !important;
+        }
+        #screen-shop button.rounded-full:active, #screen-recipes button.rounded-full:active { transform: translateY(3px); box-shadow: 0 1px 0 #0F8B7E !important; }
+
+        @media (min-width: 700px) and (orientation: landscape) {
+            .btn-3d { height: 4.1rem; font-size: 1.45rem; }
+        }
+
+        /* ===== FONT: lebih jelas + judul script 3D ===== */
+        body, button, input, select, textarea { font-family: 'Nunito', 'Segoe UI', system-ui, sans-serif !important; letter-spacing: 0 !important; }
+        .font-serif, .btn-3d, .btn-gold, .replay-btn { font-family: 'Nunito', 'Segoe UI', system-ui, sans-serif !important; }
+        .font-serif { font-weight: 800; }
+        .btn-3d { font-weight: 900; letter-spacing: .01em !important; }
+        .btn-gold { letter-spacing: .02em !important; font-weight: 900; }
+
+        /* Teks dialog lebih terbaca */
+        #story-text .font-serif { font-size: 17px !important; line-height: 1.5; font-weight: 800 !important; color: #10212B !important; font-style: normal !important; }
+        #story-text .chat-bubble .text-\[10px\] { font-size: 12px !important; font-weight: 900 !important; letter-spacing: .14em !important; color: #0F766E !important; }
+        #story-text .animate-pulse { font-size: 12px !important; font-weight: 800 !important; }
+        #screen-game .text-\[10px\], #screen-game .text-\[9px\] { font-size: 12px !important; font-weight: 800 !important; }
+        #npc-name, #player-name { font-size: 13px !important; font-weight: 900 !important; letter-spacing: .12em !important; }
+        .replay-btn { font-weight: 900; letter-spacing: .06em !important; }
+        #screen-lobby .text-\[10px\], #screen-lobby .text-xs { font-size: 12px !important; font-weight: 800 !important; }
+        #screen-shop .text-xs, #screen-recipes .text-xs { font-weight: 800 !important; }
+
+        /* Judul game: script 3D */
+        .lobby-left h1, #result-title {
+            font-family: 'Pacifico', cursive !important; font-weight: 400 !important;
+            background: none !important; background-image: none !important;
+            -webkit-text-fill-color: #FFFFFF !important; color: #FFFFFF !important; filter: none !important;
+            line-height: 1.12 !important; letter-spacing: .01em !important;
+            text-shadow:
+                1px 1px 0 #14B8A6, 2px 2px 0 #12ADA0, 3px 3px 0 #0F9D8F, 4px 4px 0 #0D8F82,
+                5px 5px 0 #0B7F74, 6px 6px 0 #0A7167, 7px 7px 0 #08635A, 8px 8px 0 #065650,
+                10px 14px 18px rgba(6,60,56,0.45) !important;
+        }
+        .lobby-left h1 { font-size: 64px !important; }
+        #result-title { font-size: 44px !important;
+            text-shadow: 1px 1px 0 #14B8A6, 2px 2px 0 #0F9D8F, 3px 3px 0 #0D8F82, 4px 4px 0 #0B7F74, 5px 5px 0 #08635A, 6px 10px 14px rgba(6,60,56,0.4) !important; }
+        #audio-init h2 { font-weight: 900; }
+
+        @media (min-width: 700px) and (orientation: landscape) {
+            .lobby-left h1 { font-size: 100px !important; margin-bottom: 26px !important; }
+            #story-text .font-serif { font-size: 24px !important; line-height: 1.45; }
+            #story-text .chat-bubble .text-\[10px\] { font-size: 14px !important; }
+            #story-text .animate-pulse { font-size: 14px !important; }
+            #screen-game .text-\[10px\], #screen-game .text-\[9px\] { font-size: 14px !important; }
+            #npc-name, #player-name { font-size: 15px !important; }
+            .btn-3d { font-size: 1.5rem; }
+            .lobby-tagline { font-size: 16px !important; font-weight: 800; letter-spacing: .3em; }
+        }
+
+        /* ===== Footer developer ===== */
+        .game-footer { display: flex; align-items: center; justify-content: center; gap: 12px; margin-top: auto; padding: 14px 0 4px; width: 100%; }
+        .gf-line { flex: 0 1 60px; height: 1px; background: linear-gradient(90deg, transparent, rgba(13,148,136,0.7), transparent); }
+        .gf-text { font-size: 13px; font-weight: 700; color: #3F6762; letter-spacing: .06em; white-space: nowrap; }
+        .gf-text strong { color: #0F766E; font-weight: 900; }
+        @media (min-width: 700px) and (orientation: landscape) {
+            .game-footer { position: absolute; left: 0; right: 0; bottom: 18px; margin: 0; padding: 0; }
+            .gf-line { flex-basis: 120px; }
+            .gf-text { font-size: 15px; }
+        }
+
+        /* ===== COVER ===== */
+        .cover-screen { position: absolute; inset: 0; z-index: 999; overflow: hidden; display: flex; align-items: flex-end; justify-content: center; background: #EAF6F4; }
+        .cover-bg { display: none; position: absolute; inset: -30px; background: url('https://i.ibb.co.com/XxqtD3t4/38224.png') center/cover no-repeat; filter: blur(26px) saturate(1.1); }
+        .cover-img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover !important; object-position: center; }
+        .cover-play {
+            z-index: 2; position: absolute; left: 50%; bottom: 9%; transform: translateX(-50%);
+            display: inline-flex; align-items: center; gap: 14px; padding: 16px 64px; font-size: 28px; letter-spacing: .06em !important;
+            animation: coverPulse 1.8s ease-in-out infinite;
+        }
+        .cover-play:hover { transform: translateX(-50%) translateY(-3px) !important; }
+        .cover-play:active { transform: translateX(-50%) translateY(6px) !important; }
+        @keyframes coverPulse { 0%,100% { filter: brightness(1); } 50% { filter: brightness(1.12); } }
+        @media (min-width: 700px) and (orientation: landscape) { .cover-play { font-size: 34px; padding: 18px 88px; bottom: 8%; } }
+
+        /* ===== LATAR GAME (blur) ===== */
+        #game-bg {
+            display: none; position: absolute; inset: -24px; z-index: 0; pointer-events: none;
+            background: url('https://i.ibb.co.com/NgTKq2tz/Sunny-Countryside-Outdoor-Kitchen-1.png') center/cover no-repeat;
+            filter: blur(9px);
+        }
+        #game-bg::after { content: ''; position: absolute; inset: 0; background: linear-gradient(135deg, rgba(240,253,250,0.38), rgba(240,253,250,0.18)); }
+        .theme-lobby #game-bg, .theme-dapur #game-bg, .theme-teras #game-bg, .theme-vip #game-bg { display: block; }
+        .theme-vip #game-bg::after { background: linear-gradient(135deg, rgba(244,63,94,0.30), rgba(240,253,250,0.12)); }
+        .theme-lobby, .theme-dapur, .theme-teras, .theme-vip { background-image: none !important; background-color: #EAF6F4 !important; }
+
+        /* ===== MOBILE: karakter tanpa frame ===== */
+        @media not all and (min-width: 700px) and (orientation: landscape) {
+            #npc-avatar, #player-avatar {
+                width: auto !important; height: 150px !important; font-size: 84px !important; line-height: 1;
+                background: transparent !important; border: 0 !important; border-radius: 0 !important;
+                box-shadow: none !important; overflow: visible !important; margin-bottom: 6px !important;
+                display: flex; align-items: flex-end; justify-content: center;
+            }
+            #npc-avatar img, #player-avatar img { width: auto !important; height: 100% !important; object-fit: contain !important; filter: drop-shadow(0 8px 12px rgba(20,60,56,0.35)); }
+            .avatar-wrapper { transform-origin: bottom center; }
+            .avatar-speaking { transform: scale(1.08); }
+            .avatar-listening { transform: scale(0.94); opacity: 0.65; }
+            #visual-scene { align-items: flex-end !important; }
+            #story-visual-icon { font-size: 48px !important; }
+        }
+
+        /* ===== Desktop: fit penuh layar ===== */
+        :root { --stage-w: 100vw; --stage-h: 100vh; --stage-scale: 1; }
+        @media (min-width: 700px) and (orientation: landscape) {
+            html, body { position: fixed; inset: 0; width: 100% !important; height: 100% !important; margin: 0 !important; padding: 0 !important; overflow: hidden; }
+            #game-container { transition: none !important; }
+        }
+    </style>
+</head>
+<body class="w-screen h-screen flex items-center justify-center m-0 p-0 bg-slate-900">
+
+    <div id="game-container" class="w-full h-full relative flex flex-col overflow-hidden theme-lobby max-w-md mx-auto sm:rounded-2xl sm:h-[95vh] sm:border-4 sm:border-slate-800">
+        <div id="game-bg"></div>
+        
+        <!-- Audio Init Overlay (Forced interaction for Tone.js) -->
+        <div id="audio-init" class="cover-screen">
+            <div class="cover-bg"></div>
+            <img class="cover-img" src="https://i.ibb.co.com/XxqtD3t4/38224.png" alt="Kring Catering">
+            <button type="button" class="btn-gold cover-play" onclick="initAudio()"><i class="fas fa-play"></i><span>Main</span></button>
+        </div>
+
+        <!-- ================= LOBBY SCREEN ================= -->
+        <div id="screen-lobby" class="screen active flex-col items-center justify-center h-full p-6 text-center relative z-10 w-full">
+            <div class="lobby-left">
+            <div class="mb-4 relative mt-8">
+                <div class="w-20 h-20 rounded-full bg-gradient-to-br from-slate-800 to-slate-900 border border-slate-600 mx-auto flex items-center justify-center text-4xl shadow-[0_0_30px_rgba(20,184,166,0.2)] relative z-10">
+                    <i class="fas fa-concierge-bell text-[#14B8A6]"></i>
+                </div>
+                <div class="absolute inset-0 bg-[#14B8A6] blur-3xl opacity-20 rounded-full"></div>
+            </div>
+            
+            <h1 class="font-serif text-5xl font-bold mb-1 text-transparent bg-clip-text bg-gradient-to-r from-[#14B8A6] via-[#99F6E4] to-[#14B8A6]">Kring<br>Catering</h1>
+            <div class="w-16 h-1 bg-gradient-to-r from-transparent via-[#14B8A6] to-transparent mx-auto mb-4 opacity-70"></div>
+            <p class="lobby-tagline">Layanan Katering Premium</p>
+            </div>
+            <div class="lobby-right">
+            
+            <!-- Stats & Menu Lobi -->
+            <div class="glass-panel rounded-2xl w-full p-4 mb-6 flex justify-between items-center text-white">
+                <div class="text-left">
+                    <div class="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Hari Ke</div>
+                    <div class="text-2xl font-serif font-bold text-white" id="lobby-day">1</div>
+                </div>
+                <div class="text-right">
+                    <div class="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Tabungan</div>
+                    <div class="text-xl font-bold text-green-400 font-mono" id="lobby-money">Rp 0</div>
+                </div>
+            </div>
+
+            <!-- Tombol Tambahan -->
+            <div class="flex gap-3 w-full mb-6">
+                <button onclick="switchScreen('shop')" class="flex-1 bg-slate-800 border border-slate-600 rounded-xl py-3 text-white font-bold text-sm hover:bg-slate-700 active:scale-95 transition-all shadow-lg">
+                    <i class="fas fa-store text-[#14B8A6] mb-1 text-lg block"></i> Toko
+                </button>
+                <button onclick="switchScreen('recipes')" class="flex-1 bg-slate-800 border border-slate-600 rounded-xl py-3 text-white font-bold text-sm hover:bg-slate-700 active:scale-95 transition-all shadow-lg">
+                    <i class="fas fa-book-open text-[#14B8A6] mb-1 text-lg block"></i> Resep
+                </button>
+            </div>
+            
+            <p class="text-slate-400 text-[10px] font-bold mb-3 tracking-[0.2em] uppercase w-full text-left pl-2">Mulai Shift : Pilih Peran</p>
+            
+            <div class="grid grid-cols-2 gap-4 w-full">
+                <!-- Role Aisyah -->
+                <div onclick="selectRole('aisyah')" class="relative cursor-pointer group outline-none">
+                    <div class="absolute inset-0 bg-pink-900 rounded-2xl translate-y-1.5 opacity-80 group-active:translate-y-0 transition-transform duration-100"></div>
+                    <div class="relative h-full bg-gradient-to-br from-slate-800 to-slate-900 border border-pink-500/50 rounded-2xl p-4 flex flex-col items-center transform transition-all duration-100 group-active:translate-y-1.5 hover:shadow-[0_0_20px_rgba(236,72,153,0.4)] overflow-hidden">
+                        <div class="w-12 h-12 bg-slate-800 rounded-full flex items-center justify-center overflow-hidden mb-2 border-[2px] border-pink-500/40 shadow-[0_0_15px_rgba(236,72,153,0.3)]">
+                            <img src="https://i.ibb.co.com/HDrP4HVz/38225.png" class="w-full h-full object-cover">
+                        </div>
+                        <h3 class="font-serif text-base font-bold text-slate-100">Aisyah</h3>
+                        <p class="text-[9px] text-pink-300 mt-1 uppercase font-bold tracking-widest text-center">Bantu Masak</p>
+                    </div>
+                </div>
+
+                <!-- Role Somat -->
+                <div onclick="selectRole('somat')" class="relative cursor-pointer group outline-none">
+                    <div class="absolute inset-0 bg-sky-900 rounded-2xl translate-y-1.5 opacity-80 group-active:translate-y-0 transition-transform duration-100"></div>
+                    <div class="relative h-full bg-gradient-to-br from-slate-800 to-slate-900 border border-sky-500/50 rounded-2xl p-4 flex flex-col items-center transform transition-all duration-100 group-active:translate-y-1.5 hover:shadow-[0_0_20px_rgba(56,189,248,0.4)] overflow-hidden">
+                        <div class="w-12 h-12 bg-slate-800 rounded-full flex items-center justify-center overflow-hidden mb-2 border-[2px] border-sky-500/40 shadow-[0_0_15px_rgba(56,189,248,0.3)]">
+                            <img src="https://i.ibb.co.com/s9Z48jLN/file-00000000ca8482079b949174767f96e0.png" class="w-full h-full object-cover">
+                        </div>
+                        <h3 class="font-serif text-base font-bold text-slate-100">Somat</h3>
+                        <p class="text-[9px] text-sky-300 mt-1 uppercase font-bold tracking-widest text-center">Hitung Pesanan</p>
+                    </div>
+                </div>
+            </div>
+            </div>
+            <footer class="game-footer">
+                <span class="gf-line"></span>
+                <span class="gf-text">Developer: <strong>Ifan Shovi, S.Pd</strong></span>
+                <span class="gf-line"></span>
+            </footer>
+        </div>
+
+        <!-- ================= SHOP SCREEN ================= -->
+        <div id="screen-shop" class="screen flex-col h-full bg-slate-900 text-white relative z-20 w-full p-6 overflow-y-auto">
+            <div class="flex justify-between items-center mb-6">
+                <button onclick="switchScreen('lobby')" class="w-10 h-10 bg-slate-800 rounded-full flex items-center justify-center hover:bg-slate-700"><i class="fas fa-arrow-left"></i></button>
+                <h2 class="font-serif text-2xl font-bold text-[#14B8A6]">Toko Perlengkapan</h2>
+                <div class="w-10"></div>
+            </div>
+            
+            <div class="bg-slate-800 border border-slate-700 rounded-xl p-4 mb-6 flex justify-between items-center">
+                <span class="text-sm text-slate-400 font-bold uppercase">Saldo Anda</span>
+                <span class="font-mono text-xl font-bold text-green-400" id="shop-money">Rp 0</span>
+            </div>
+
+            <!-- Upgrades Aisyah -->
+            <h3 class="text-xs font-bold text-pink-400 uppercase tracking-widest mb-3 border-b border-slate-700 pb-2"><i class="fas fa-utensils mr-2"></i>Upgrade Aisyah (Max Nyawa)</h3>
+            <div class="flex flex-col gap-3 mb-6" id="shop-aisyah">
+                <!-- Di-render via JS -->
+            </div>
+
+            <!-- Upgrades Somat -->
+            <h3 class="text-xs font-bold text-sky-400 uppercase tracking-widest mb-3 border-b border-slate-700 pb-2"><i class="fas fa-motorcycle mr-2"></i>Upgrade Somat (Bonus Uang)</h3>
+            <div class="flex flex-col gap-3" id="shop-somat">
+                <!-- Di-render via JS -->
+            </div>
+        </div>
+
+        <!-- ================= RECIPE BOOK SCREEN ================= -->
+        <div id="screen-recipes" class="screen flex-col h-full bg-slate-900 text-white relative z-20 w-full p-6 overflow-y-auto">
+            <div class="flex justify-between items-center mb-6">
+                <button onclick="switchScreen('lobby')" class="w-10 h-10 bg-slate-800 rounded-full flex items-center justify-center hover:bg-slate-700"><i class="fas fa-arrow-left"></i></button>
+                <h2 class="font-serif text-2xl font-bold text-[#14B8A6]">Buku Resep Rahasia</h2>
+                <div class="w-10"></div>
+            </div>
+            
+            <p class="text-xs text-slate-400 text-center mb-6">Selesaikan shift harian dengan nilai sempurna (Nyawa Penuh) untuk membuka resep legendaris keluarga!</p>
+            
+            <div class="grid grid-cols-2 gap-4" id="recipe-grid">
+                <!-- Di-render via JS -->
+            </div>
+        </div>
+
+        <!-- ================= GAME SCREEN ================= -->
+        <div id="screen-game" class="screen flex-col h-full relative z-10 w-full">
+            
+            <!-- HUD Minimalis (Glassmorphism) -->
+            <div class="w-full px-5 pt-6 pb-2 flex justify-between items-center relative z-50">
+                <!-- Nyawa (Kiri) -->
+                <div class="flex gap-1 bg-white/70 backdrop-blur-md px-3 py-1.5 rounded-full shadow-sm border border-white/60" id="health-container"></div>
+                
+                <!-- Status Hari & Target (Tengah) -->
+                <div class="flex items-center gap-3 bg-white/70 backdrop-blur-md px-4 py-1.5 rounded-full shadow-sm border border-white/60">
+                    <div class="text-[10px] font-bold text-slate-600 uppercase tracking-widest flex items-center gap-1">
+                        <i class="fas fa-calendar-day text-[#14B8A6]"></i> <span id="day-display" class="text-slate-800 text-xs font-black">1</span>
+                    </div>
+                    <div class="w-1.5 h-1.5 bg-slate-300 rounded-full"></div>
+                    <div class="text-[10px] font-bold text-slate-600 uppercase tracking-widest flex items-center gap-1">
+                        <i class="fas fa-check-circle text-green-500"></i> <span id="score-display" class="text-slate-800 text-xs font-black">0</span>/<span id="target-display">10</span>
+                    </div>
+                </div>
+
+                <!-- Keluar (Kanan) -->
+                <button onclick="showLobby()" class="w-8 h-8 flex items-center justify-center bg-white/70 backdrop-blur-md rounded-full shadow-sm border border-white/60 text-slate-600 hover:bg-white active:scale-90 transition-all">
+                    <i class="fas fa-sign-out-alt"></i>
+                </button>
+            </div>
+
+            <!-- VIP Timer Bar -->
+            <div id="vip-timer-container" class="w-full px-5 pb-2 relative z-50">
+                <div class="text-[10px] font-black text-red-600 uppercase tracking-widest mb-1 animate-pulse"><i class="fas fa-exclamation-triangle"></i> PESANAN VIP! Waktu Terbatas! <i class="fas fa-exclamation-triangle"></i></div>
+                <div class="w-full h-2 bg-slate-800/50 rounded-full overflow-hidden">
+                    <div id="vip-bar" class="h-full bg-gradient-to-r from-red-500 to-orange-400 w-full shadow-[0_0_10px_rgba(239,68,68,1)] transition-all ease-linear"></div>
+                </div>
+            </div>
+
+            <!-- Progress Bar Biasa -->
+            <div class="w-full px-5 pb-4 relative z-50" id="normal-progress">
+                <div class="flex justify-between items-end mb-1 px-1">
+                    <span class="text-[9px] font-bold text-slate-700 uppercase tracking-widest bg-white/50 px-2 py-0.5 rounded-full backdrop-blur-sm">Progress Hari Ini</span>
+                    <span class="text-[9px] font-bold text-slate-800 bg-white/50 px-2 py-0.5 rounded-full backdrop-blur-sm"><i class="fas fa-star text-[#14B8A6] text-[8px] mr-0.5"></i> <span id="progress-text">0</span>%</span>
+                </div>
+                <div class="w-full h-2.5 bg-white/40 backdrop-blur-md rounded-full border border-white/60 overflow-hidden shadow-inner">
+                    <div id="progress-bar-fill" class="h-full w-0 bg-gradient-to-r from-[#F59E0B] to-[#FDE047] shadow-[0_0_10px_rgba(245,158,11,0.6)] rounded-full transition-all duration-700 ease-out"></div>
+                </div>
+            </div>
+
+            <!-- Area Interaksi / Karakter (Transparan, tanpa box putih) -->
+            <div class="flex-1 px-5 flex flex-col justify-center pb-2 relative z-10">
+                <div class="flex items-center justify-between mb-8 px-2" id="visual-scene">
+                    <!-- NPC -->
+                    <div class="flex flex-col items-center relative z-10 avatar-wrapper" id="npc-wrapper">
+                        <div id="npc-avatar" class="w-16 h-16 rounded-full bg-slate-100 flex items-center justify-center text-4xl shadow-lg border-2 border-white mb-2 overflow-hidden">👩</div>
+                        <span id="npc-name" class="text-[11px] font-black text-slate-800 tracking-wider uppercase bg-white px-3 py-1 rounded-full shadow-md">Ibu</span>
+                        <button id="replay-btn" type="button" class="replay-btn" onclick="replayInstruction(event)" title="Ulangi perintah" aria-label="Ulangi perintah" style="display:none"><i class="fas fa-redo-alt"></i><span>Ulangi</span></button>
+                    </div>
+                    
+                    <!-- Benda Tengah -->
+                    <div class="flex-1 flex flex-col justify-center items-center relative mx-4 z-10">
+                        <div id="story-visual-icon" class="text-6xl drop-shadow-2xl bounce-slow mb-2">🥚</div>
+                    </div>
+                    
+                    <!-- Player -->
+                    <div class="flex flex-col items-center relative z-10 avatar-wrapper" id="player-wrapper">
+                        <div id="player-avatar" class="w-16 h-16 rounded-full bg-slate-100 flex items-center justify-center text-4xl shadow-lg border-2 border-white mb-2 overflow-hidden">👩‍🍳</div>
+                        <span id="player-name" class="text-[11px] font-black text-slate-800 tracking-wider uppercase bg-white px-3 py-1 rounded-full shadow-md">Aisyah</span>
+                    </div>
+                </div>
+
+                <!-- Chat Area -->
+                <div class="w-full mb-6 cursor-pointer" id="story-container" onclick="advanceDialogue()">
+                    <div id="story-text" class="w-full flex flex-col gap-1 min-h-[130px] justify-center relative">
+                        <!-- Teks dirender via JS -->
+                    </div>
+                </div>
+
+                <!-- Notifikasi Benar/Salah (Glassmorphism Callout) -->
+                <div id="feedback-msg" class="hide px-6 py-4 rounded-2xl bg-white/95 backdrop-blur-md shadow-2xl flex items-center justify-center gap-3 font-bold z-50 border border-white/50 w-[85%] text-center">
+                    <!-- Dirender via JS -->
+                </div>
+
+                <!-- Pilihan Ganda -->
+                <div class="grid grid-cols-2 gap-4 pb-6 transition-opacity duration-300" id="options-container">
+                    <button class="btn-3d" onclick="checkAnswer(0)" id="opt-0">A</button>
+                    <button class="btn-3d" onclick="checkAnswer(1)" id="opt-1">B</button>
+                    <button class="btn-3d" onclick="checkAnswer(2)" id="opt-2">C</button>
+                    <button class="btn-3d" onclick="checkAnswer(3)" id="opt-3">D</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ================= RESULT SCREEN ================= -->
+        <div id="screen-result" class="screen flex-col items-center justify-center h-full p-6 text-center relative w-full bg-slate-50 overflow-hidden">
+            <div class="relative z-10 w-full flex flex-col items-center">
+                <div class="mb-4 relative">
+                    <div class="w-24 h-24 rounded-full bg-gradient-to-br from-gold-primary to-teal-200 mx-auto flex items-center justify-center text-5xl shadow-xl" id="result-icon-container">
+                        <span id="result-icon">🌟</span>
+                    </div>
+                </div>
+                
+                <h2 class="font-serif text-4xl font-bold mb-2 text-slate-800 drop-shadow-sm" id="result-title">Selesai!</h2>
+                <p class="text-slate-600 mb-6 bg-white p-3 rounded-xl shadow-sm font-medium text-sm max-w-[85%]" id="result-desc">Pekerjaan hari ini selesai.</p>
+                
+                <div class="w-full bg-white rounded-2xl p-5 mb-6 shadow-[0_10px_30px_rgba(0,0,0,0.05)] border border-slate-100">
+                    <div class="flex justify-between items-center mb-4 pb-4 border-b border-slate-100">
+                        <span class="text-xs text-slate-500 font-bold uppercase"><i class="fas fa-clipboard-check mr-2 text-slate-400"></i>Pesanan Selesai</span>
+                        <span class="font-serif text-2xl font-black text-slate-800" id="final-score">0</span>
+                    </div>
+                    <div class="flex justify-between items-center mb-4 pb-4 border-b border-slate-100">
+                        <span class="text-xs text-slate-500 font-bold uppercase"><i class="fas fa-coins mr-2 text-green-500"></i>Uang Didapat</span>
+                        <span class="font-mono text-xl font-bold text-green-500" id="final-money">+Rp 0</span>
+                    </div>
+                    <div class="flex justify-between items-center bg-slate-50 p-3 rounded-lg border border-slate-100" id="recipe-unlock-box">
+                        <span class="text-xs text-slate-600 font-bold uppercase"><i class="fas fa-gift mr-2 text-[#14B8A6]"></i>Status Resep Rahasia</span>
+                        <span class="text-[10px] font-black text-[#14B8A6] uppercase tracking-wide bg-[#14B8A6]/10 px-2 py-1 rounded" id="final-achievement">-</span>
+                    </div>
+                </div>
+                
+                <button onclick="showLobby()" class="btn-gold w-full py-4 text-lg">
+                    <i class="fas fa-home mr-2"></i> Kembali ke Lobi
+                </button>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        // ================= STATE & DATA =================
+        let synth, chime, buzz, siren, winSound;
+        let audioInit = false;
+
+        let saveState = {
+            day: 1,
+            totalMoney: 0,
+            upgrades: { aisyahHealth: 3, somatMultiplier: 1 },
+            itemsBought: [],
+            unlockedRecipes: []
+        };
+
+        // Load Save Game aman
+        try {
+            const savedData = localStorage.getItem('tring_catering_save');
+            if (savedData) {
+                const parsed = JSON.parse(savedData);
+                saveState.day = parsed.day || 1;
+                saveState.totalMoney = parsed.totalMoney || 0;
+                if(parsed.upgrades) saveState.upgrades = { ...saveState.upgrades, ...parsed.upgrades };
+                if(parsed.itemsBought) saveState.itemsBought = parsed.itemsBought;
+                if(parsed.unlockedRecipes) saveState.unlockedRecipes = parsed.unlockedRecipes;
+            }
+        } catch(e) {
+            console.warn("Save file corrupt, using default data");
+        }
+
+        let score = 0;
+        let targetScore = 10; 
+        let health = 3;
+        let maxHealth = 3;
+        let currentRole = ''; 
+        let currentQuestion = {};
+        let isAnswering = false;
+        let dialogueStep = 0; 
+        let shiftMoney = 0;
+        
+        let isVIP = false;
+        let isVIPRound = false; 
+        let vipTimer = null;
+        let vipTimeLeft = 0;
+        const VIP_TIME_MAX = 8000;
+        
+        const shopItems = [
+            { id: 'a1', role: 'aisyah', name: 'Mixer Elegan', price: 15000, desc: '+1 Max Nyawa', icon: 'blender', type: 'health', val: 4 },
+            { id: 'a2', role: 'aisyah', name: 'Oven Emas', price: 35000, desc: '+2 Max Nyawa', icon: 'fire-burner', type: 'health', val: 5 },
+            { id: 's1', role: 'somat', name: 'Sepeda Gunung', price: 15000, desc: 'Uang Saku x1.5', icon: 'bicycle', type: 'multiplier', val: 1.5 },
+            { id: 's2', role: 'somat', name: 'Motor Matic', price: 40000, desc: 'Uang Saku x2.0', icon: 'motorcycle', type: 'multiplier', val: 2 }
+        ];
+
+        const recipesPool = [
+            { id: 'r1', name: 'Tumpeng Mini', icon: '🍛', desc: 'Resep warisan khas acara syukuran.' },
+            { id: 'r2', name: 'Lapis Legit', icon: '🍰', desc: 'Kue berlapis yang butuh kesabaran ekstra.' },
+            { id: 'r3', name: 'Kue Lumpur', icon: '🍮', desc: 'Lembut, manis, dan lumer di mulut.' },
+            { id: 'r4', name: 'Dadar Gulung', icon: '🌯', desc: 'Manisnya unti kelapa yang legendaris.' },
+            { id: 'r5', name: 'Putu Ayu', icon: '🧁', desc: 'Harum pandan dan gurihnya kelapa parut.' }
+        ];
+
+        const menuItems = [{ name: "Kue Sus", icon: "🧁" }, { name: "Lemper", icon: "🌯" }, { name: "Risoles", icon: "🌮" }, { name: "Nasi Kotak", icon: "🍱" }, { name: "Kue Tok", icon: "🥮" }, { name: "Lumpia", icon: "🫔" }];
+        const ingredients = [{ name: "Telur Ayam", icon: "🥚", unit: "butir" }, { name: "Tepung Terigu", icon: "🌾", unit: "kg" }, { name: "Mentega", icon: "🧈", unit: "gram" }, { name: "Gula Pasir", icon: "🧂", unit: "gram" }, { name: "Cokelat", icon: "🍫", unit: "batang" }];
+
+        // ================= AUDIO (TONE.JS) =================
+        async function initAudio() {
+            if (audioInit) return;
+            document.getElementById('audio-init').style.display = 'none';
+            try {
+                await Tone.start();
+                synth = new Tone.PolySynth(Tone.Synth).toDestination();
+                synth.volume.value = -10;
+
+                chime = new Tone.Synth({ oscillator: { type: 'sine' }, envelope: { attack: 0.01, decay: 0.1, sustain: 0.5, release: 1 } }).toDestination();
+                chime.volume.value = -5;
+
+                buzz = new Tone.Synth({ oscillator: { type: 'sawtooth' }, envelope: { attack: 0.01, decay: 0.2, sustain: 0, release: 0.2 } }).toDestination();
+                buzz.volume.value = -10;
+
+                siren = new Tone.Synth({ oscillator: { type: 'square' }, envelope: { attack: 0.1, decay: 0.5, sustain: 0, release: 0.5 } }).toDestination();
+                siren.volume.value = -15;
+
+                audioInit = true;
+                playSound('click');
+            } catch(e) {
+                console.error("Audio initialization failed", e);
+            }
+        }
+
+        function playSound(type) {
+            if (!audioInit) return;
+            const now = Tone.now();
+            switch(type) {
+                case 'click': synth.triggerAttackRelease("C5", "32n", now); break;
+                case 'correct': 
+                    chime.triggerAttackRelease("E5", "8n", now); 
+                    chime.triggerAttackRelease("G5", "8n", now + 0.1); 
+                    chime.triggerAttackRelease("C6", "4n", now + 0.2); 
+                    break;
+                case 'wrong': buzz.triggerAttackRelease("C3", "4n", now); break;
+                case 'vip': siren.triggerAttackRelease("A4", "4n", now); siren.triggerAttackRelease("E4", "4n", now + 0.2); break;
+                case 'win': 
+                    synth.triggerAttackRelease(["C4", "E4", "G4"], "8n", now);
+                    synth.triggerAttackRelease(["F4", "A4", "C5"], "8n", now + 0.2);
+                    synth.triggerAttackRelease(["G4", "B4", "D5"], "8n", now + 0.4);
+                    synth.triggerAttackRelease(["C5", "E5", "G5", "C6"], "2n", now + 0.6);
+                    break;
+                case 'lose': synth.triggerAttackRelease(["C4", "Eb4"], "2n", now); synth.triggerAttackRelease(["G3", "Bb3"], "2n", now+0.3); break;
+            }
+        }
+
+        function saveGame() {
+            localStorage.setItem('tring_catering_save', JSON.stringify(saveState));
+            updateLobbyStats();
+        }
+
+        function generateMathProblem() {
+            let difficulty = saveState.day;
+            let type = Math.floor(Math.random() * (difficulty > 3 ? 4 : (difficulty > 1 ? 3 : 2))); 
+            let num1, num2, answer, npcText, playerText, icon;
+
+            if (currentRole === 'aisyah') {
+                let itemObj = ingredients[Math.floor(Math.random() * ingredients.length)];
+                icon = itemObj.icon;
+                switch(type) {
+                    case 0:
+                        num1 = Math.floor(Math.random() * (10 + difficulty * 2)) + 5;
+                        num2 = Math.floor(Math.random() * (10 + difficulty * 2)) + 5;
+                        answer = num1 + num2;
+                        npcText = `Ibu butuh ${num1} ${itemObj.unit} ${itemObj.name}, lalu tambah ${num2} ${itemObj.unit} lagi. Tolong disiapkan ya.`;
+                        playerText = `Baik, Bu! Total ${itemObj.name} yang Aisyah siapkan adalah...`;
+                        break;
+                    case 1:
+                        num1 = Math.floor(Math.random() * (20 + difficulty * 3)) + 15;
+                        num2 = Math.floor(Math.random() * (10 + difficulty)) + 5;
+                        if(num2 >= num1) [num1, num2] = [num2, num1]; 
+                        answer = num1 - num2;
+                        npcText = `Tadi ada ${num1} ${itemObj.unit} ${itemObj.name}. Ibu pakai ${num2} ${itemObj.unit}. Sisa berapa di meja?`;
+                        playerText = `Sebentar Bu, Aisyah hitung. Sisanya tinggal...`;
+                        break;
+                    case 2:
+                        num1 = Math.floor(Math.random() * 3) + 3; 
+                        num2 = Math.floor(Math.random() * (5 + difficulty)) + 3; 
+                        answer = num1 * num2;
+                        npcText = `Kita buat ${num1} resep. Tiap resep butuh ${num2} ${itemObj.unit} ${itemObj.name}. Tolong total ya.`;
+                        playerText = `Siap! Total semuanya berarti...`;
+                        break;
+                    case 3:
+                        num2 = Math.floor(Math.random() * 3) + 2; 
+                        answer = Math.floor(Math.random() * (4 + difficulty)) + 4; 
+                        num1 = num2 * answer; 
+                        npcText = `Ibu beli ${num1} ${itemObj.unit} ${itemObj.name}. Bagi rata ke ${num2} toples ya Nak.`;
+                        playerText = `Oke Bu. Tiap toples isinya...`;
+                        break;
+                }
+            } else {
+                let itemObj = menuItems[Math.floor(Math.random() * menuItems.length)];
+                icon = itemObj.icon;
+                switch(type) {
+                    case 0:
+                        num1 = Math.floor(Math.random() * (10 + difficulty * 2)) + 5;
+                        num2 = Math.floor(Math.random() * (10 + difficulty * 2)) + 5;
+                        answer = num1 + num2;
+                        npcText = `Somat, cek hantaran. Ada ${num1} ${itemObj.name} kotak dan ${num2} mika. Totalnya berapa?`;
+                        playerText = `Siap, Yah! Total seluruh ${itemObj.name} adalah...`;
+                        break;
+                    case 1:
+                        num1 = Math.floor(Math.random() * (20 + difficulty * 3)) + 15;
+                        num2 = Math.floor(Math.random() * (10 + difficulty)) + 5;
+                        if(num2 >= num1) [num1, num2] = [num2, num1];
+                        answer = num1 - num2;
+                        npcText = `Ayah buat ${num1} kotak ${itemObj.name}. Sudah dibawa kurir ${num2} kotak. Coba cek sisanya.`;
+                        playerText = `Oke Yah. Sisa ${itemObj.name} yang belum dikirim tinggal...`;
+                        break;
+                    case 2:
+                        num1 = Math.floor(Math.random() * 3) + 3;
+                        num2 = Math.floor(Math.random() * (5 + difficulty)) + 3;
+                        answer = num1 * num2;
+                        npcText = `Ada ${num1} nampan. Tolong isi tiap nampan dengan persis ${num2} ${itemObj.name}.`;
+                        playerText = `Laksanakan! Total yang Somat tata adalah...`;
+                        break;
+                    case 3:
+                        num2 = Math.floor(Math.random() * 3) + 2;
+                        answer = Math.floor(Math.random() * (4 + difficulty)) + 4;
+                        num1 = num2 * answer;
+                        npcText = `Ada pesanan masal ${num1} ${itemObj.name}. Tolong bagi rata ke ${num2} tas hantaran.`;
+                        playerText = `Baik Yah! Tiap tas hantaran akan berisi...`;
+                        break;
+                }
+            }
+
+            let options = [answer];
+            while(options.length < 4) {
+                let offset = Math.floor(Math.random() * 15) - 7;
+                if(offset === 0) offset = 2;
+                let wrongAns = answer + offset;
+                if(wrongAns > 0 && !options.includes(wrongAns)) options.push(wrongAns);
+            }
+            options = options.sort(() => Math.random() - 0.5);
+            return { npcText, playerText, options, correctIndex: options.indexOf(answer), icon };
+        }
+
+        const els = {
+            gameContainer: document.getElementById('game-container'),
+            story: document.getElementById('story-text'),
+            visualIcon: document.getElementById('story-visual-icon'),
+            options: [document.getElementById('opt-0'), document.getElementById('opt-1'), document.getElementById('opt-2'), document.getElementById('opt-3')],
+            vipContainer: document.getElementById('vip-timer-container'),
+            vipBar: document.getElementById('vip-bar')
+        };
+
+        function switchScreen(id) {
+            playSound('click');
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            setTimeout(() => document.getElementById(`screen-${id}`).classList.add('active'), 50);
+            if (id === 'lobby') updateLobbyStats();
+            if (id === 'shop') renderShop();
+            if (id === 'recipes') renderRecipes();
+        }
+
+        function showLobby() {
+            clearTimeout(replayTimer); setReplayBtn(false);
+            try { window.speechSynthesis && window.speechSynthesis.cancel(); } catch (e) {}
+            clearVIP();
+            els.gameContainer.className = 'w-full h-full relative flex flex-col overflow-hidden max-w-md mx-auto sm:rounded-2xl sm:h-[95vh] sm:border-4 sm:border-slate-800 theme-lobby';
+            switchScreen('lobby');
+        }
+
+        function updateLobbyStats() {
+            document.getElementById('lobby-money').innerText = `Rp ${saveState.totalMoney.toLocaleString('id-ID')}`;
+            document.getElementById('lobby-day').innerText = saveState.day;
+        }
+
+        function selectRole(role) {
+            playSound('click');
+            currentRole = role;
+            els.gameContainer.classList.remove('theme-lobby');
+            els.gameContainer.classList.add(role === 'aisyah' ? 'theme-dapur' : 'theme-teras');
+            
+            if (role === 'aisyah') {
+                document.getElementById('npc-avatar').innerHTML = '<img src="https://i.ibb.co.com/rK1rFXWH/38226.png" class="w-full h-full object-cover">';
+                document.getElementById('player-avatar').innerHTML = '<img src="https://i.ibb.co.com/HDrP4HVz/38225.png" class="w-full h-full object-cover">';
+                document.getElementById('npc-name').innerText = 'Ibu';
+                document.getElementById('player-name').innerText = 'Aisyah';
+            } else {
+                document.getElementById('npc-avatar').innerHTML = '<img src="https://i.ibb.co.com/fzhMzznq/file-0000000051948211899a3936349dabdc.png" class="w-full h-full object-cover">';
+                document.getElementById('player-avatar').innerHTML = '<img src="https://i.ibb.co.com/s9Z48jLN/file-00000000ca8482079b949174767f96e0.png" class="w-full h-full object-cover">';
+                document.getElementById('npc-name').innerText = 'Ayah';
+                document.getElementById('player-name').innerText = 'Somat';
+            }
+            
+            startGame();
+        }
+
+        function startGame() {
+            score = 0;
+            shiftMoney = 0;
+            targetScore = 10 + ((saveState.day - 1) * 2);
+            maxHealth = saveState.upgrades.aisyahHealth;
+            health = maxHealth;
+            isAnswering = false;
+            
+            document.getElementById('day-display').innerText = saveState.day;
+            document.getElementById('score-display').innerText = score;
+            document.getElementById('target-display').innerText = targetScore;
+            document.getElementById('progress-bar-fill').style.width = '0%';
+            document.getElementById('progress-text').innerText = '0';
+            updateHealthUI();
+            
+            switchScreen('game');
+            nextTurn();
+        }
+
+        function updateHealthUI() {
+            const container = document.getElementById('health-container');
+            container.innerHTML = '';
+            for(let i=0; i < maxHealth; i++) {
+                const heart = document.createElement('div');
+                heart.className = `text-[13px] transition-all duration-300 ${i < health ? 'text-red-500 drop-shadow-sm scale-100' : 'text-slate-300 scale-75 opacity-40'}`;
+                heart.innerHTML = '<i class="fas fa-heart"></i>';
+                container.appendChild(heart);
+            }
+        }
+
+        function nextTurn() {
+            isAnswering = false;
+            clearVIP();
+            isVIPRound = false;
+            
+            if (Math.random() < 0.15 && saveState.day > 1 && score < targetScore - 1) {
+                isVIPRound = true;
+            }
+
+            currentQuestion = generateMathProblem();
+            els.visualIcon.innerText = currentQuestion.icon;
+            
+            document.getElementById('feedback-msg').classList.remove('show');
+            document.getElementById('feedback-msg').classList.add('hide');
+            document.getElementById('options-container').classList.add('opacity-0', 'pointer-events-none');
+
+            for(let i=0; i<4; i++) {
+                els.options[i].innerText = currentQuestion.options[i];
+                els.options[i].className = 'btn-3d'; 
+                els.options[i].disabled = false;
+            }
+            
+            showDialogue(0);
+        }
+
+        let replayTimer = null;
+        function setReplayBtn(show) {
+            const b = document.getElementById('replay-btn');
+            if (b) { b.style.display = show ? 'inline-flex' : 'none'; if (!show) b.classList.remove('playing'); }
+        }
+        function speakInstruction(text) {
+            try {
+                if (!('speechSynthesis' in window)) return;
+                window.speechSynthesis.cancel();
+                const u = new SpeechSynthesisUtterance(text);
+                u.lang = 'id-ID'; u.rate = 0.95;
+                const btn = document.getElementById('replay-btn');
+                if (btn) { btn.classList.add('playing'); u.onend = u.onerror = () => btn.classList.remove('playing'); }
+                window.speechSynthesis.speak(u);
+            } catch (e) {}
+        }
+        function replayInstruction(e) {
+            if (e) e.stopPropagation();
+            if (isAnswering || !currentQuestion || !currentQuestion.npcText) return;
+            clearTimeout(replayTimer);
+            const npc = document.getElementById('npc-wrapper');
+            const player = document.getElementById('player-wrapper');
+            if (dialogueStep === 1) {
+                // Tampilkan kembali perintah Ibu/Ayah sementara, lalu kembali ke balasan pemain
+                npc.classList.add('avatar-speaking'); npc.classList.remove('avatar-listening');
+                player.classList.add('avatar-listening'); player.classList.remove('avatar-speaking');
+                const npcName = currentRole === 'aisyah' ? 'Ibu' : 'Ayah';
+                els.story.innerHTML = `
+                    <div class="flex flex-col items-start w-full">
+                        <div class="chat-bubble chat-left">
+                            <div class="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1">${npcName}</div>
+                            <div class="font-serif text-[15px] font-bold text-slate-800">"${currentQuestion.npcText}"</div>
+                        </div>
+                    </div>`;
+                const q = currentQuestion;
+                replayTimer = setTimeout(() => {
+                    if (!isAnswering && dialogueStep === 1 && currentQuestion === q) showDialogue(1);
+                }, 6000);
+            }
+            speakInstruction(currentQuestion.npcText);
+        }
+
+        function showDialogue(step) {
+            clearTimeout(replayTimer);
+            dialogueStep = step;
+            setReplayBtn(true);
+            const npc = document.getElementById('npc-wrapper');
+            const player = document.getElementById('player-wrapper');
+
+            if (step === 0) {
+                npc.classList.add('avatar-speaking'); npc.classList.remove('avatar-listening');
+                player.classList.add('avatar-listening'); player.classList.remove('avatar-speaking');
+                
+                let npcName = currentRole === 'aisyah' ? 'Ibu' : 'Ayah';
+                els.story.innerHTML = `
+                    <div class="flex flex-col items-start w-full">
+                        <div class="chat-bubble chat-left">
+                            <div class="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1">${npcName}</div>
+                            <div class="font-serif text-[15px] font-bold text-slate-800">"${currentQuestion.npcText}"</div>
+                        </div>
+                        <div class="text-left mt-2 text-[10px] text-slate-500 uppercase tracking-widest font-black animate-pulse ml-4">
+                            <i class="fas fa-hand-pointer mr-1"></i> Ketuk membalas
+                        </div>
+                    </div>
+                `;
+            } else if (step === 1) {
+                player.classList.add('avatar-speaking'); player.classList.remove('avatar-listening');
+                npc.classList.add('avatar-listening'); npc.classList.remove('avatar-speaking');
+                
+                let playerName = currentRole === 'aisyah' ? 'Aisyah' : 'Somat';
+                els.story.innerHTML = `
+                    <div class="flex flex-col items-end w-full">
+                        <div class="chat-bubble chat-right text-right">
+                            <div class="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1">${playerName}</div>
+                            <div class="font-serif text-[15px] font-bold text-slate-800 italic">"${currentQuestion.playerText}"</div>
+                        </div>
+                    </div>
+                `;
+                document.getElementById('options-container').classList.remove('opacity-0', 'pointer-events-none');
+                
+                if (isVIPRound) {
+                    startVIP();
+                    isVIPRound = false;
+                }
+            }
+        }
+
+        function advanceDialogue() {
+            if (dialogueStep === 0 && !isAnswering) showDialogue(1);
+        }
+
+        function startVIP() {
+            isVIP = true;
+            els.gameContainer.classList.add('theme-vip');
+            els.vipContainer.style.display = 'block';
+            playSound('vip');
+            
+            vipTimeLeft = VIP_TIME_MAX;
+            els.vipBar.style.width = '100%';
+            
+            vipTimer = setInterval(() => {
+                if (isAnswering) return clearVIP();
+                vipTimeLeft -= 100;
+                let percent = (vipTimeLeft / VIP_TIME_MAX) * 100;
+                els.vipBar.style.width = percent + '%';
+                
+                if (vipTimeLeft <= 0) {
+                    clearVIP();
+                    checkAnswer(-1);
+                }
+            }, 100);
+        }
+
+        function clearVIP() {
+            isVIP = false;
+            clearInterval(vipTimer);
+            els.gameContainer.classList.remove('theme-vip');
+            els.vipContainer.style.display = 'none';
+        }
+
+        function checkAnswer(selectedIndex) {
+            if (isAnswering) return;
+            isAnswering = true;
+            clearTimeout(replayTimer);
+            setReplayBtn(false);
+            try { window.speechSynthesis && window.speechSynthesis.cancel(); } catch (e) {}
+            clearVIP();
+
+            const isCorrect = selectedIndex === currentQuestion.correctIndex;
+            let reactionText = "";
+            let npcName = currentRole === 'aisyah' ? 'Ibu' : 'Ayah';
+            let playerName = currentRole === 'aisyah' ? 'Aisyah' : 'Somat';
+
+            const feedback = document.getElementById('feedback-msg');
+
+            if (isCorrect) {
+                playSound('correct');
+                els.options[selectedIndex].className = 'btn-3d btn-correct';
+                score++;
+                
+                let baseReward = 2000 * saveState.upgrades.somatMultiplier;
+                if (isVIP) baseReward *= 3;
+                shiftMoney += baseReward;
+
+                document.getElementById('score-display').innerText = score;
+                let progressPercent = Math.round((score / targetScore) * 100);
+                document.getElementById('progress-bar-fill').style.width = `${progressPercent}%`;
+                document.getElementById('progress-text').innerText = progressPercent;
+
+                feedback.innerHTML = `<div class="shrink-0 w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-green-100 text-green-500 flex items-center justify-center text-lg sm:text-xl"><i class="fas fa-check"></i></div> <span class="text-green-600 text-base sm:text-lg whitespace-nowrap">+Rp ${baseReward.toLocaleString('id-ID')}</span>`;
+                reactionText = isVIP ? `Luar biasa ${playerName}! Pesanan kilat selesai, pelanggan sangat puas!` : `Terima kasih ya, ${playerName}! Hitunganmu tepat.`;
+                
+                createParticles(window.innerWidth/2, window.innerHeight/2, true);
+            } else {
+                playSound('wrong');
+                if(selectedIndex >= 0) els.options[selectedIndex].className = 'btn-3d btn-wrong';
+                els.options[currentQuestion.correctIndex].className = 'btn-3d btn-correct';
+                health--;
+                updateHealthUI();
+
+                feedback.innerHTML = `<div class="shrink-0 w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-red-100 text-red-500 flex items-center justify-center text-lg sm:text-xl"><i class="fas fa-times"></i></div> <span class="text-red-600 text-base sm:text-lg whitespace-nowrap">Waduh, Keliru!</span>`;
+                reactionText = (selectedIndex === -1) ? `Waktu habis sayang, pesanan VIP lepas. Tidak apa-apa, fokus lagi.` : `Maaf sayang, sepertinya keliru. Jawabannya harusnya ${currentQuestion.options[currentQuestion.correctIndex]}.`;
+            }
+            
+            document.getElementById('options-container').classList.add('opacity-0', 'pointer-events-none');
+
+            document.getElementById('npc-wrapper').classList.add('avatar-speaking');
+            document.getElementById('player-wrapper').classList.add('avatar-listening');
+
+            els.story.innerHTML = `
+                <div class="flex flex-col items-start w-full">
+                    <div class="chat-bubble chat-left">
+                        <div class="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1">${npcName}</div>
+                        <div class="font-serif text-[15px] font-bold text-slate-800">"${reactionText}"</div>
+                    </div>
+                </div>
+            `;
+
+            setTimeout(() => {
+                if (isCorrect) {
+                    if (score >= targetScore) gameOver(true);
+                    else nextTurn();
+                } else {
+                    if (health <= 0) gameOver(false);
+                    else nextTurn();
+                }
+            }, 2500);
+        }
+
+        function gameOver(isWin) {
+            document.getElementById('final-score').innerText = `${score}/${targetScore}`;
+            document.getElementById('final-money').innerText = `+Rp ${shiftMoney.toLocaleString('id-ID')}`;
+            
+            saveState.totalMoney += shiftMoney;
+            let unlockedNew = false;
+            let achievementText = "Kerja Bagus";
+
+            if (isWin) {
+                playSound('win');
+                saveState.day++;
+                document.getElementById('result-title').innerText = "Shift Selesai!";
+                document.getElementById('result-desc').innerText = `Pelanggan sangat puas! Lanjut ke hari berikutnya.`;
+                document.getElementById('result-icon-container').className = "w-24 h-24 rounded-full bg-gradient-to-br from-gold-primary to-teal-200 mx-auto flex items-center justify-center text-5xl shadow-xl";
+                
+                if (health === maxHealth) {
+                    const locked = recipesPool.filter(r => !saveState.unlockedRecipes.includes(r.id));
+                    if (locked.length > 0) {
+                        const newRecipe = locked[Math.floor(Math.random() * locked.length)];
+                        saveState.unlockedRecipes.push(newRecipe.id);
+                        achievementText = `Membuka Resep: ${newRecipe.name}!`;
+                        unlockedNew = true;
+                    } else {
+                        achievementText = "Master Koki (Semua Resep Terbuka)";
+                    }
+                }
+                
+                for(let i=0; i<30; i++) {
+                    let c = document.createElement('div');
+                    c.className = 'confetti';
+                    c.style.left = Math.random() * 100 + '%';
+                    c.style.backgroundColor = ['#14B8A6', '#27AE60', '#E74C3C', '#3498DB'][Math.floor(Math.random()*4)];
+                    c.style.animationDuration = (Math.random() * 2 + 2) + 's';
+                    document.getElementById('screen-result').appendChild(c);
+                    setTimeout(() => c.remove(), 4000);
+                }
+            } else {
+                playSound('lose');
+                document.getElementById('result-title').innerText = "Kelelahan";
+                document.getElementById('result-desc').innerText = `Tenaga habis hari ini. Istirahat dan coba lagi besok!`;
+                document.getElementById('result-icon-container').className = "w-24 h-24 rounded-full bg-gradient-to-br from-slate-400 to-slate-200 mx-auto flex items-center justify-center text-5xl shadow-xl";
+                achievementText = "Perlu Latihan";
+                document.getElementById('result-icon').innerText = "😅";
+            }
+
+            document.getElementById('final-achievement').innerText = achievementText;
+            document.getElementById('recipe-unlock-box').style.backgroundColor = unlockedNew ? '#FEF3C7' : '#F8FAFC';
+            
+            saveGame();
+            switchScreen('result');
+        }
+
+        function showToast(message) {
+            let toast = document.createElement('div');
+            toast.className = 'fixed top-10 left-1/2 transform -translate-x-1/2 bg-slate-800 text-white px-6 py-3 rounded-full shadow-2xl font-bold z-[1000] transition-all duration-300 flex items-center gap-2 border border-slate-600';
+            toast.innerHTML = `<i class="fas fa-info-circle text-[#14B8A6]"></i> ${message}`;
+            document.body.appendChild(toast);
+            
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                toast.style.transform = 'translate(-50%, -20px)';
+            }, 2000);
+            setTimeout(() => toast.remove(), 2300);
+        }
+
+        function buyItem(id) {
+            playSound('click');
+            const item = shopItems.find(i => i.id === id);
+            if (saveState.itemsBought.includes(id)) return;
+            if (saveState.totalMoney < item.price) {
+                showToast("Uang saku tidak cukup!");
+                return;
+            }
+
+            saveState.totalMoney -= item.price;
+            saveState.itemsBought.push(id);
+            if(item.type === 'health') saveState.upgrades.aisyahHealth = item.val;
+            if(item.type === 'multiplier') saveState.upgrades.somatMultiplier = item.val;
+            
+            saveGame();
+            renderShop();
+        }
+
+        function renderShop() {
+            document.getElementById('shop-money').innerText = `Rp ${saveState.totalMoney.toLocaleString('id-ID')}`;
+            const contA = document.getElementById('shop-aisyah');
+            const contS = document.getElementById('shop-somat');
+            contA.innerHTML = ''; contS.innerHTML = '';
+
+            shopItems.forEach(item => {
+                const isBought = saveState.itemsBought.includes(item.id);
+                const canBuy = saveState.totalMoney >= item.price;
+                
+                const card = document.createElement('div');
+                card.className = `flex justify-between items-center bg-slate-800 p-4 rounded-xl border ${isBought ? 'border-green-500/50' : 'border-slate-700'}`;
+                card.innerHTML = `
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-full bg-slate-700 flex items-center justify-center text-lg text-white"><i class="fas fa-${item.icon}"></i></div>
+                        <div>
+                            <div class="font-bold text-sm text-white">${item.name}</div>
+                            <div class="text-[10px] text-slate-400">${item.desc}</div>
+                        </div>
+                    </div>
+                    ${isBought 
+                        ? `<span class="text-xs font-bold text-green-400 bg-green-400/10 px-3 py-1 rounded-full"><i class="fas fa-check mr-1"></i>Terbeli</span>` 
+                        : `<button onclick="buyItem('${item.id}')" class="text-xs font-bold px-3 py-2 rounded-lg transition-all ${canBuy ? 'bg-[#14B8A6] text-white hover:bg-teal-500' : 'bg-slate-700 text-slate-500 cursor-not-allowed'}">Rp ${item.price.toLocaleString('id-ID')}</button>`
+                    }
+                `;
+                if(item.role === 'aisyah') contA.appendChild(card);
+                else contS.appendChild(card);
+            });
+        }
+
+        function renderRecipes() {
+            const grid = document.getElementById('recipe-grid');
+            grid.innerHTML = '';
+            
+            recipesPool.forEach(recipe => {
+                const isUnlocked = saveState.unlockedRecipes.includes(recipe.id);
+                const card = document.createElement('div');
+                card.className = `bg-slate-800 p-4 rounded-xl border border-slate-700 text-center flex flex-col items-center justify-center h-40 transition-all recipe-card ${!isUnlocked ? 'locked' : 'hover:scale-105 hover:border-[#14B8A6]'}`;
+                
+                card.innerHTML = `
+                    <div class="text-4xl mb-2 drop-shadow-md">${isUnlocked ? recipe.icon : '❓'}</div>
+                    <div class="font-serif font-bold text-sm text-white mb-1 leading-tight">${isUnlocked ? recipe.name : 'Terkunci'}</div>
+                    ${isUnlocked ? `<div class="text-[9px] text-slate-400 leading-tight">${recipe.desc}</div>` : ''}
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        function createParticles(x, y, isCorrect) {
+            const colors = isCorrect ? ['#27AE60', '#14B8A6', '#5EEAD4'] : ['#E74C3C', '#C0392B'];
+            for(let i=0; i<8; i++) {
+                const p = document.createElement('div');
+                p.className = 'particle';
+                p.style.left = x + 'px'; p.style.top = y + 'px';
+                p.style.width = Math.random() * 8 + 4 + 'px'; p.style.height = p.style.width;
+                p.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+                
+                const angle = Math.random() * Math.PI * 2;
+                const distance = Math.random() * 60 + 20;
+                
+                p.animate([
+                    { transform: 'translate(0,0) scale(1)', opacity: 1 },
+                    { transform: `translate(${Math.cos(angle)*distance}px, ${Math.sin(angle)*distance - 50}px) scale(0)`, opacity: 0 }
+                ], { duration: 600 + Math.random()*400, easing: 'cubic-bezier(0, .9, .57, 1)' });
+
+                document.body.appendChild(p);
+                setTimeout(() => p.remove(), 1000);
+            }
+        }
+
+        function fitStage() {
+            const sc = Math.min(window.innerHeight / 720, window.innerWidth / 1100);
+            const r = document.documentElement.style;
+            r.setProperty('--stage-scale', sc);
+            r.setProperty('--stage-w', (window.innerWidth / sc) + 'px');
+            r.setProperty('--stage-h', (window.innerHeight / sc) + 'px');
+        }
+        window.addEventListener('resize', fitStage);
+        window.addEventListener('orientationchange', () => setTimeout(fitStage, 150));
+        if (window.visualViewport) window.visualViewport.addEventListener('resize', fitStage);
+        document.addEventListener('fullscreenchange', fitStage);
+        fitStage();
+
+        updateLobbyStats();
+    </script>
+</body>
+</html>
